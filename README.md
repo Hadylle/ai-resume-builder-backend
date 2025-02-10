@@ -9,7 +9,7 @@ Backend for parsing resumes, analyzing job descriptions, and performing job matc
 
 ### How to Run
 1. Clone the repository:
-   `git clone https://github.com/your-username/ai-resume-builder-backend.git`
+   `git clone https://github.com/Hadylle/ai-resume-builder-backend.git`
 2. Configure `application.properties` for MongoDB.
 3. Build and run the app:
    `mvn spring-boot:run`
