@@ -1,8 +1,7 @@
 package com.example.ai_resume_builder.model;
 
 import jakarta.persistence.*;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.NoArgsConstructor;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 import org.springframework.security.core.GrantedAuthority;
@@ -15,12 +14,11 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+@NoArgsConstructor
 @Entity
 @Table(name = "users")
 public class User implements UserDetails {
 
-    // Getters and Setters
-    @Getter
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     @JdbcTypeCode(SqlTypes.VARCHAR) // Maps UUID to VARCHAR in the database
@@ -54,16 +52,9 @@ public class User implements UserDetails {
         this.roles = roles; // Use roles, not role
         this.email = email;
     }
-
-    // Default constructor
-    public User() {}
-
     public void setId(UUID id) {
         this.id = id;
     }
-
-
-
     public void setUsername(String username) {
         this.username = username;
     }

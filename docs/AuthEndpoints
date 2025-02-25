@@ -1,0 +1,63 @@
+The authentication API provides two main endpoints: POST /signin and POST /signup,
+both accessible at http://localhost:8081/api/auth.
+ ** To sign in,
+send a JSON request like this :
+{
+    "username": "hadil",
+    "password": "1234"
+
+}
+and if successful,
+the response will contain an accessToken, id, username, email, roles, and tokenType like this :
+{
+    "accessToken": "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJoYWRpbCIsImlhdCI6MTc0MDA1NzE3NCwiZXhwIjoxNzQwMTQzNTc0fQ.V3J3uLg2z2YJgJnndcFCOOAj-6ELnrPs7GyT93VmJtg",
+    "id": "2efbaf05-16bf-42e1-b792-ccdd4235c7ea",
+    "username": "hadil",
+    "email": "hadil@gmail.com",
+    "roles": [
+        "ROLE_USER"
+    ],
+    "tokenType": "Bearer"
+}
+The token must be included in the Authorization header as Bearer <accessToken> for protected endpoints.
+To sign up, send a JSON request with username, password, roles, and email:
+  {
+      "username": "dd",
+      "password": "1345",
+      "roles": "USER",
+      "email": "dd@gmail.com"
+
+  }
+  , and a successful registration will return a simple message indicating success: 201 Created
+  {
+      "message": "Success"
+  }
+  The roles field can be "USER" or "ADMIN" depending on the user's access level.
+ Common errors include 400 Bad Request for invalid input, 401 Unauthorized for incorrect credentials
+ or missing tokens, and 403 Forbidden when access is denied due to insufficient permissions.
+
+http://localhost:8081/api/auth/signup
+req :
+{
+    "username": "knkjj",
+    "password": "1345",
+    "roles": "USER",
+    "email": "dd@gmail.com"
+
+}
+Res 400 Bad Request :
+{
+    "error": "Email is already in use!"
+}
+http://localhost:8081/api/auth/signin
+req:
+{
+    "username": "hadi",
+    "password": "1234"
+
+}
+response:
+{
+    "error": "Invalid username or password"
+}
+
