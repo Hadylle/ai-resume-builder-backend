@@ -10,6 +10,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -33,7 +34,6 @@ public class WebSecurityConfig {
     UserService userService;
 
 
-
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http.csrf(csrf -> csrf.disable())
@@ -41,7 +41,13 @@ public class WebSecurityConfig {
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/auth/**").permitAll()
-                        .anyRequest().authenticated());
+                        //.requestMatchers("/api/role/admin").hasRole("ADMIN")  // Only ADMIN can access
+                        //.requestMatchers("/api/role/user").hasRole("USER")  // Only USER can access
+                        .requestMatchers("/api/role/**").permitAll()
+                        .anyRequest().authenticated())
+                //.requestCache(requestCache -> requestCache.disable())
+
+                .authenticationProvider(authenticationProvider());
 
         http.addFilterBefore(authenticationJwtTokenFilter(), UsernamePasswordAuthenticationFilter.class);
 
@@ -62,6 +68,21 @@ public class WebSecurityConfig {
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
+
+
+    @Bean
+    public DaoAuthenticationProvider authenticationProvider() {
+        DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider();
+        authProvider.setUserDetailsService(userDetailsService()); // Load users from DB
+        authProvider.setPasswordEncoder(passwordEncoder()); // Use BCrypt for passwords
+        return authProvider;
+    }
+
+    @Bean
+    public UserDetailsService userDetailsService() {
+        return userService;
+    }
 }
+
 
 

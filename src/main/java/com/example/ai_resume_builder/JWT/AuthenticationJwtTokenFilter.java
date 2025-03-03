@@ -12,9 +12,11 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
+import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
 
+@Component
 public class AuthenticationJwtTokenFilter extends OncePerRequestFilter {
     @Autowired
     private JwtUtils jwtUtils;
@@ -26,17 +28,29 @@ public class AuthenticationJwtTokenFilter extends OncePerRequestFilter {
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {
+        System.out.println("dzovi");
         try {
             String jwt = parseJwt(request);
+            logger.info("Extracted JWT: " + jwt); // Log extracted token
+
             if (jwt != null && jwtUtils.validateJwtToken(jwt)) {
+                logger.info("JWT is valid");
                 String username = jwtUtils.getUserNameFromJwtToken(jwt);
+                logger.info("Extracted Username: " + username);
+
 
                 UserDetails userDetails = userDetailsService.loadUserByUsername(username);
                 UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(userDetails, null,
                         userDetails.getAuthorities());
                 authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                logger.info("Token Authentication Successful: " + authentication);
 
                 SecurityContextHolder.getContext().setAuthentication(authentication);
+                logger.info("Token Authentication Successful for: " + username);
+
+            } else {
+                logger.warn("JWT is null or invalid");
+
             }
         } catch (Exception e) {
             logger.error("Cannot set user authentication: {}", e);
@@ -47,6 +61,7 @@ public class AuthenticationJwtTokenFilter extends OncePerRequestFilter {
 
     private String parseJwt(HttpServletRequest request) {
         String headerAuth = request.getHeader("Authorization");
+        logger.info("Authorization Header: " + headerAuth);
 
         if (StringUtils.hasText(headerAuth) && headerAuth.startsWith("Bearer ")) {
             return headerAuth.substring(7, headerAuth.length());

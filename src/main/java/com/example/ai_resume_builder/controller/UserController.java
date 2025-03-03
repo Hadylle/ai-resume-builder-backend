@@ -20,10 +20,7 @@ public class UserController {
         return ResponseEntity.ok(userService.getAllUsers());
     }
 
-    @GetMapping("/{username}")
-    public ResponseEntity<User> getUserByUsername(@PathVariable String username) {
-        return ResponseEntity.ok(userService.getUserByUsername(username));
-    }
+
 
     @PostMapping
     public ResponseEntity<User> createUser(@RequestBody User user) {

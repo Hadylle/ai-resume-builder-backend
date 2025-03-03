@@ -1,9 +1,7 @@
 package com.example.ai_resume_builder.service;
 
 import com.example.ai_resume_builder.JWT.JwtUtils;
-import com.example.ai_resume_builder.model.Role;
 import com.example.ai_resume_builder.model.User;
-import com.example.ai_resume_builder.repository.RoleRepository;
 import com.example.ai_resume_builder.repository.UserRepository;
 import com.example.ai_resume_builder.request.LoginRequest;
 import com.example.ai_resume_builder.request.SignupRequest;
@@ -21,40 +19,36 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
 import java.util.stream.Collectors;
 
-@Component
+@Service
 public class UserService implements UserDetailsService {
 
     private final UserRepository userRepository;
-    private final RoleRepository roleRepository;
     private final PasswordEncoder encoder;
     private final JwtUtils jwtUtils;
 
     // Constructor-based injection
     public UserService(
             UserRepository userRepository,
-            RoleRepository roleRepository,
             PasswordEncoder encoder,
             JwtUtils jwtUtils
     ) {
         this.userRepository = userRepository;
-        this.roleRepository = roleRepository;
         this.encoder = encoder;
         this.jwtUtils = jwtUtils;
     }
 
     public ResponseEntity<?> authenticateUser(LoginRequest loginRequest, AuthenticationManager authenticationManager) {
-        System.out.println("Starting authentication process for user: " + loginRequest.getUsername());
+        System.out.println("Starting authentication process for user: " + loginRequest.getEmail());
 
         try {
-            System.out.println("Authenticating user with username: " + loginRequest.getUsername());
+            System.out.println("Authenticating user with email: " + loginRequest.getEmail());
             Authentication authentication = authenticationManager.authenticate(
-                    new UsernamePasswordAuthenticationToken(loginRequest.getUsername(), loginRequest.getPassword()));
+                    new UsernamePasswordAuthenticationToken(loginRequest.getEmail(), loginRequest.getPassword()));
 
             SecurityContextHolder.getContext().setAuthentication(authentication);
             System.out.println("User authenticated successfully: " + authentication.getName());
@@ -63,31 +57,28 @@ public class UserService implements UserDetailsService {
             System.out.println("Generated JWT: " + jwt);
             System.out.println("Generated Refresh Token: " + refreshToken);
 
-            User user = userRepository.findByUsername(loginRequest.getUsername());
+            Optional<User> user = userRepository.findByEmail(loginRequest.getEmail());
             System.out.println("Retrieved user from repository: " + user);
 
-            if (user == null) {
-                System.out.println("User not found for username: " + loginRequest.getUsername());
+            if (user.isEmpty()) {
+                System.out.println("User not found for email: " + loginRequest.getEmail());
                 return ResponseEntity.status(HttpStatus.NOT_FOUND)
                         .body(Map.of("error", "User not found"));
             }
-            System.out.println("User roles: " + user.getAuthorities());
-            List<String> roles = user.getAuthorities().stream()
-                    .map(item -> item.getAuthority())
-                    .collect(Collectors.toList());
+            System.out.println("User role: " + user.get().getRole());
+            List<String> roles = Collections.singletonList(user.get().getRole().name());
 
             return ResponseEntity.ok(new JwtResponse(
                     jwt,
                     refreshToken,
-                    user.getId(),
-                    user.getUsername(),
-                    user.getEmail(),
-                    roles
+                    user.get().getId(),
+                    user.get().getEmail(),
+                    user.get().getRole().name()
             ));
 
         } catch (BadCredentialsException e) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .body(Map.of("error", "Invalid username or password"));
+                    .body(Map.of("error", "Invalid email or password"));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(Map.of("error", "An error occurred: " + e.getMessage()));
@@ -96,28 +87,22 @@ public class UserService implements UserDetailsService {
 
     public ResponseEntity<?> registerUser(@Valid SignupRequest signUpRequest) {
         try {
-            if (userRepository.existsByUsername(signUpRequest.getUsername())) {
-                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                        .body(Map.of("error", "Username is already taken!"));
-            }
-
             if (userRepository.existsByEmail(signUpRequest.getEmail())) {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                         .body(Map.of("error", "Email is already in use!"));
             }
-            Role userRole = roleRepository.findByName(Role.ERole.USER);
-            if (userRole == null) {
-                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                        .body(Map.of("error", "Role USER is not found in the database."));
-            }
-            Set<Role> roles = new HashSet<>();
-            roles.add(userRole);
 
-            User user = new User(signUpRequest.getUsername(), encoder.encode(signUpRequest.getPassword()), roles, signUpRequest.getEmail());
+            User user = new User(
+                    signUpRequest.getEmail(),
+                    encoder.encode(signUpRequest.getPassword()),
+                    User.Role.USER, // Default to USER role
+                    signUpRequest.getFirstName(),
+                    signUpRequest.getLastName()
+            );
             userRepository.save(user);
 
             return ResponseEntity.status(HttpStatus.CREATED)
-                    .body(Map.of("message", "Success"));
+                    .body(Map.of("message", "User registered successfully"));
 
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
@@ -132,51 +117,72 @@ public class UserService implements UserDetailsService {
             throw new Exception("Invalid refresh token");
         }
 
-        String username = jwtUtils.getUserNameFromJwtToken(requestRefreshToken);
-        User user = userRepository.findByUsername(username);
-        if (user == null) {
-            throw new RuntimeException("Error: User not found");
+        String email = jwtUtils.getUserNameFromJwtToken(requestRefreshToken);
+        Optional<User> optionalUser = userRepository.findByEmail(email);
+
+        if (optionalUser.isPresent()) {
+            User user = optionalUser.get(); // Now this is your entity directly
+
+            // Create an Authentication object directly from your User entity
+            Authentication authentication = new UsernamePasswordAuthenticationToken(
+                    user, // Pass the user entity instead of a new UserDetails object
+                    null,
+                    user.getAuthorities()
+            );
+
+            String jwt = jwtUtils.generateJwtToken(authentication);
+            String refreshToken = jwtUtils.generateRefreshToken(authentication);
+
+            return ResponseEntity.ok(new JwtResponse(
+                    jwt, refreshToken, user.getId(), user.getEmail(), user.getRole().name()));
+        } else {
+            throw new RuntimeException("User not found!");
         }
-
-        UserDetails userDetails = new org.springframework.security.core.userdetails.User(
-                user.getUsername(),
-                user.getPassword(),
-                user.getAuthorities()
-        );
-
-        Authentication authentication = new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
-        String jwt = jwtUtils.generateJwtToken(authentication);
-        String refreshToken = jwtUtils.generateRefreshToken(authentication);
-
-        List<String> roles = user.getRoles().stream()
-                .map(role -> role.getName().name())
-                .collect(Collectors.toList());
-
-        return ResponseEntity.ok(new JwtResponse(jwt, refreshToken, user.getId(), user.getUsername(), user.getEmail(), roles));
     }
+
+
 
     @Override
-    public User loadUserByUsername(String username) throws UsernameNotFoundException {
-        User user = userRepository.findByUsername(username);
-        if (user == null) {
-            throw new UsernameNotFoundException("User not found: " + username);
+    public User loadUserByUsername(String email) throws UsernameNotFoundException {
+        Optional<User> optionalUser = userRepository.findByEmail(email);
+        if (optionalUser.isEmpty()) {
+            throw new UsernameNotFoundException("User not found: " + email);
         }
-        return user;
+        return optionalUser.get();
     }
-
 
     public List<User> getAllUsers() {
         return userRepository.findAll();
     }
 
-    public User getUserByUsername(String username) {
-        return userRepository.findByUsername(username);
+    public User getUserByEmail(String email) {
+        Optional<User> user = userRepository.findByEmail(email);
+        return user.get();
     }
 
     public User saveUser(User user) {
         return userRepository.save(user);
     }
 
+    public boolean authenticateUserForRole(String email, String password, User.Role role) {
+        System.out.println("Authenticating user: " + email + " for role: " + role);
+        Optional<User> userOptional = userRepository.findByEmail(email);
+
+        if (userOptional.isPresent()) {
+            System.out.println("User found in database");
+            User user = userOptional.get();
+            boolean passwordMatches = encoder.matches(password, user.getPassword());
+            boolean roleMatches = user.getRole().equals(role);
+
+            System.out.println("Password matches: " + passwordMatches);
+            System.out.println("Role matches: " + roleMatches);
+
+            return passwordMatches && roleMatches;
+        } else {
+            System.out.println("User not found in database");
+            return false;
+        }
+    }
 
 
 }

@@ -60,4 +60,25 @@ response:
 {
     "error": "Invalid username or password"
 }
+** Testing the refresh token endpoint :
+request :  POST http://localhost:8081/api/auth/refresh-token
+body : {
+           "refreshToken" : "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJhZG1pbkBleGFtcGxlLmNvbSIsImlhdCI6MTc0MDczNjY4MywiZXhwIjoxNzQwODIzMDgzfQ.AmVxXuV9Gv3LVV9k6giwko2zdWDIugCXPG3nomQWigo"
+       }
+Response : 200 OK
+{
+    "refreshToken": "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJhZG1pbkBleGFtcGxlLmNvbSIsImlhdCI6MTc0MDczNjk3NiwiZXhwIjoxNzQxMzQxNzc2fQ.v5FT3G2-3HiOGfKVXq4CXkkMXiewQ6L4TC5zdp32PlU",
+    "id": "864e2e21-2a9c-422b-a045-98f1cf0dee6e",
+    "email": "admin@example.com",
+    "role": "ADMIN",
+    "token": "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJhZG1pbkBleGFtcGxlLmNvbSIsImlhdCI6MTc0MDczNjk3NiwiZXhwIjoxNzQwODIzMzc2fQ.Zs1gp-8iaiLRPMG4YjBbmHCL7cHrgN2Rd3rT7MHLd-U",
+    "type": "Bearer"
+}
 
+** Testing the RoleBased Access trying on ADMIN :
+HEADERS :
+Key: Authorization  Value: Bearer eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJhZG1pbkBleGFtcGxlLmNvbSIsImlhdCI6MTc0MDczNjY4MywiZXhwIjoxNzQwODIzMDgzfQ.AmVxXuV9Gv3LVV9k6giwko2zdWDIugCXPG3nomQWigo
+Request :
+Get http://localhost:8081/api/role/admin
+Response : 200 OK
+welcome Admin
