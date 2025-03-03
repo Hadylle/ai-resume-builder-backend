@@ -1,0 +1,17 @@
+E:\bureau\pfe 2025\ai_resume_builder\src\main\java\com\example\ai_resume_builder\AiResumeBuilderApplication.java
+E:\bureau\pfe 2025\ai_resume_builder\src\main\java\com\example\ai_resume_builder\Auth\SignUpRequest.java
+E:\bureau\pfe 2025\ai_resume_builder\src\main\java\com\example\ai_resume_builder\controller\AuthenticationController.java
+E:\bureau\pfe 2025\ai_resume_builder\src\main\java\com\example\ai_resume_builder\controller\UserController.java
+E:\bureau\pfe 2025\ai_resume_builder\src\main\java\com\example\ai_resume_builder\JWT\AuthenticationJwtTokenFilter.java
+E:\bureau\pfe 2025\ai_resume_builder\src\main\java\com\example\ai_resume_builder\JWT\JwtUtils.java
+E:\bureau\pfe 2025\ai_resume_builder\src\main\java\com\example\ai_resume_builder\model\Role.java
+E:\bureau\pfe 2025\ai_resume_builder\src\main\java\com\example\ai_resume_builder\model\User.java
+E:\bureau\pfe 2025\ai_resume_builder\src\main\java\com\example\ai_resume_builder\repository\RoleRepository.java
+E:\bureau\pfe 2025\ai_resume_builder\src\main\java\com\example\ai_resume_builder\repository\UserRepository.java
+E:\bureau\pfe 2025\ai_resume_builder\src\main\java\com\example\ai_resume_builder\request\LoginRequest.java
+E:\bureau\pfe 2025\ai_resume_builder\src\main\java\com\example\ai_resume_builder\request\SignupRequest.java
+E:\bureau\pfe 2025\ai_resume_builder\src\main\java\com\example\ai_resume_builder\request\TokenRefreshRequest.java
+E:\bureau\pfe 2025\ai_resume_builder\src\main\java\com\example\ai_resume_builder\response\JwtResponse.java
+E:\bureau\pfe 2025\ai_resume_builder\src\main\java\com\example\ai_resume_builder\response\TokenRefreshResponse.java
+E:\bureau\pfe 2025\ai_resume_builder\src\main\java\com\example\ai_resume_builder\security\WebSecurityConfig.java
+E:\bureau\pfe 2025\ai_resume_builder\src\main\java\com\example\ai_resume_builder\service\UserService.java

@@ -3,6 +3,7 @@ package com.example.ai_resume_builder.controller;
 import com.example.ai_resume_builder.model.User;
 import com.example.ai_resume_builder.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -15,17 +16,14 @@ public class UserController {
     private UserService userService;
 
     @GetMapping
-    public List<User> getAllUsers() {
-        return userService.getAllUsers();
+    public ResponseEntity<List<User>> getAllUsers() {
+        return ResponseEntity.ok(userService.getAllUsers());
     }
 
-    @GetMapping("/{username}")
-    public User getUserByUsername(@PathVariable String username) {
-        return userService.getUserByUsername(username);
-    }
+
 
     @PostMapping
-    public User createUser(@RequestBody User user) {
-        return userService.saveUser(user);
+    public ResponseEntity<User> createUser(@RequestBody User user) {
+        return ResponseEntity.ok(userService.saveUser(user));
     }
 }
