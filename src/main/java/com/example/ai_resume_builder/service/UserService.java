@@ -15,14 +15,14 @@ import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.util.*;
-import java.util.stream.Collectors;
 
 @Service
 public class UserService implements UserDetailsService {
@@ -31,15 +31,19 @@ public class UserService implements UserDetailsService {
     private final PasswordEncoder encoder;
     private final JwtUtils jwtUtils;
 
+    private final CloudinaryService cloudinaryService;
+
+
     // Constructor-based injection
     public UserService(
             UserRepository userRepository,
             PasswordEncoder encoder,
-            JwtUtils jwtUtils
-    ) {
+            JwtUtils jwtUtils,
+            CloudinaryService cloudinaryService) {
         this.userRepository = userRepository;
         this.encoder = encoder;
         this.jwtUtils = jwtUtils;
+        this.cloudinaryService = cloudinaryService;
     }
 
     public ResponseEntity<?> authenticateUser(LoginRequest loginRequest, AuthenticationManager authenticationManager) {
@@ -181,6 +185,26 @@ public class UserService implements UserDetailsService {
         } else {
             System.out.println("User not found in database");
             return false;
+        }
+    }
+
+    public ResponseEntity<?> uploadProfilePicture(MultipartFile file, String email) {
+        try {
+            // Upload file to Cloudinary
+            String imageUrl = cloudinaryService.uploadFile(file);
+
+            // Find user by email
+            User user = userRepository.findByEmail(email)
+                    .orElseThrow(() -> new RuntimeException("User not found"));
+
+            // Update user's profile picture URL
+            user.setProfilePictureUrl(imageUrl);
+            userRepository.save(user);
+
+            return ResponseEntity.ok(Map.of("message", "Profile picture updated", "url", imageUrl));
+
+        } catch (IOException e) {
+            return ResponseEntity.badRequest().body(Map.of("error", "File upload failed: " + e.getMessage()));
         }
     }
 

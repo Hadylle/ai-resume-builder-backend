@@ -16,7 +16,7 @@ public class RoleBasedAccessController {
     private UserService userService;
 
     @GetMapping("/admin")
-    public ResponseEntity<String> adminAccess(Authentication a) {
+    public ResponseEntity<String> adminAccess() {
         var x = "dzovi";
         System.out.println(x);
         return ResponseEntity.ok("Welcome Admin");

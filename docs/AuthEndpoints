@@ -82,3 +82,13 @@ Request :
 Get http://localhost:8081/api/role/admin
 Response : 200 OK
 welcome Admin
+
+**testing the upload profile picture
+request :  form-data
+key : file file image.jpg
+email : text admin@example.com
+response :
+{
+    "url": "http://res.cloudinary.com/dheuurohu/image/upload/v1741254689/gswyahpkdnhc3lqzw7wm.jpg",
+    "message": "Profile picture updated"
+}
