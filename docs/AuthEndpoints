@@ -92,3 +92,55 @@ response :
     "url": "http://res.cloudinary.com/dheuurohu/image/upload/v1741254689/gswyahpkdnhc3lqzw7wm.jpg",
     "message": "Profile picture updated"
 }
+
+** testing the complete-profile endpoint :
+req : PUT http://localhost:8081/users/complete-profile
+token bearer
+body: {
+        "firstName": "Jane",
+        "lastName": "Smith",
+        "phoneNumber": "1234567890",
+        "address": "123 Main St",
+        "city": "New York",
+        "state": "NY",
+        "postalCode": "10001",
+        "country": "USA",
+        "dateOfBirth": "1990-01-01",
+        "gender": "Female",
+        "nationality": "American",
+        "preferredContactMethod": "Email",
+        "maritalStatus": "Single"
+      }
+
+Response  200 OK {
+             "id": "c20d097d-838b-49ab-94f4-074b7e228c22",
+             "sub": "f41acb12-db78-4829-b1ef-982550f6da67",
+             "email": "sub@gmail.com",
+             "password": "$2a$10$iLmoN.z4.wp4aw8SnnSCwOVvphomjoe4eSkT5hFiJY3ussDAQc4tq",
+             "role": "USER",
+             "firstName": "Jane",
+             "lastName": "Smith",
+             "phoneNumber": "1234567890",
+             "address": "123 Main St",
+             "city": "New York",
+             "state": "NY",
+             "postalCode": "10001",
+             "country": "USA",
+             "dateOfBirth": "1990-01-01",
+             "gender": "Female",
+             "nationality": "American",
+             "profilePictureUrl": "http://res.cloudinary.com/dheuurohu/image/upload/v1741766903/i5kh3oe3jysifrqhmygj.jpg",
+             "preferredContactMethod": "Email",
+             "maritalStatus": "Single",
+             "enabled": true,
+             "username": "sub@gmail.com",
+             "authorities": [
+                 {
+                     "authority": "ROLE_USER"
+                 }
+             ],
+             "accountNonLocked": true,
+             "accountNonExpired": true,
+             "credentialsNonExpired": true
+         }
+

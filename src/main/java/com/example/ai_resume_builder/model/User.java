@@ -28,6 +28,9 @@ public class User implements UserDetails {
     @Column(name = "id", updatable = false, nullable = false)
     private UUID id;
 
+    @Column(name = "sub", unique = true, nullable = true)
+    private String sub;
+
     @Column(name = "email", nullable = false, unique = true)
     private String email;
 

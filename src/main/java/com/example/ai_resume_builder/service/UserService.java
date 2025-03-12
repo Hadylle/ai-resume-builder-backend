@@ -7,7 +7,9 @@ import com.example.ai_resume_builder.request.LoginRequest;
 import com.example.ai_resume_builder.request.SignupRequest;
 import com.example.ai_resume_builder.request.TokenRefreshRequest;
 import com.example.ai_resume_builder.response.JwtResponse;
+import jakarta.transaction.Transactional;
 import jakarta.validation.Valid;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -15,6 +17,7 @@ import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -27,7 +30,8 @@ import java.util.*;
 @Service
 public class UserService implements UserDetailsService {
 
-    private final UserRepository userRepository;
+    @Autowired
+    private UserRepository userRepository;
     private final PasswordEncoder encoder;
     private final JwtUtils jwtUtils;
 
@@ -47,29 +51,20 @@ public class UserService implements UserDetailsService {
     }
 
     public ResponseEntity<?> authenticateUser(LoginRequest loginRequest, AuthenticationManager authenticationManager) {
-        System.out.println("Starting authentication process for user: " + loginRequest.getEmail());
-
         try {
-            System.out.println("Authenticating user with email: " + loginRequest.getEmail());
             Authentication authentication = authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(loginRequest.getEmail(), loginRequest.getPassword()));
 
             SecurityContextHolder.getContext().setAuthentication(authentication);
-            System.out.println("User authenticated successfully: " + authentication.getName());
             String jwt = jwtUtils.generateJwtToken(authentication);
             String refreshToken = jwtUtils.generateRefreshToken(authentication);
-            System.out.println("Generated JWT: " + jwt);
-            System.out.println("Generated Refresh Token: " + refreshToken);
 
             Optional<User> user = userRepository.findByEmail(loginRequest.getEmail());
-            System.out.println("Retrieved user from repository: " + user);
-
             if (user.isEmpty()) {
-                System.out.println("User not found for email: " + loginRequest.getEmail());
                 return ResponseEntity.status(HttpStatus.NOT_FOUND)
                         .body(Map.of("error", "User not found"));
             }
-            System.out.println("User role: " + user.get().getRole());
+
             List<String> roles = Collections.singletonList(user.get().getRole().name());
 
             return ResponseEntity.ok(new JwtResponse(
@@ -188,6 +183,15 @@ public class UserService implements UserDetailsService {
         }
     }
 
+
+    public UserDetails loadUserBySub(String sub) throws UsernameNotFoundException {
+        Optional<User> optionalUser = userRepository.findBySub(sub);
+        if (optionalUser.isEmpty()) {
+            throw new UsernameNotFoundException("User not found with sub: " + sub);
+        }
+        return optionalUser.get();
+    }
+
     public ResponseEntity<?> uploadProfilePicture(MultipartFile file, String email) {
         try {
             // Upload file to Cloudinary
@@ -206,6 +210,56 @@ public class UserService implements UserDetailsService {
         } catch (IOException e) {
             return ResponseEntity.badRequest().body(Map.of("error", "File upload failed: " + e.getMessage()));
         }
+    }
+    @Transactional
+    public User completeUserProfile(String sub, User updatedUser) {
+        // Find the user by sub
+        User existingUser = userRepository.findBySub(sub)
+                .orElseThrow(() -> new RuntimeException("User not found with sub: " + sub));
+
+        if (updatedUser.getFirstName() != null) {
+            existingUser.setFirstName(updatedUser.getFirstName());
+        }
+        if (updatedUser.getLastName() != null) {
+            existingUser.setLastName(updatedUser.getLastName());
+        }
+        // Update the user's profile with the provided data
+        if (updatedUser.getPhoneNumber() != null) {
+            existingUser.setPhoneNumber(updatedUser.getPhoneNumber());
+        }
+        if (updatedUser.getAddress() != null) {
+            existingUser.setAddress(updatedUser.getAddress());
+        }
+        if (updatedUser.getCity() != null) {
+            existingUser.setCity(updatedUser.getCity());
+        }
+        if (updatedUser.getState() != null) {
+            existingUser.setState(updatedUser.getState());
+        }
+        if (updatedUser.getPostalCode() != null) {
+            existingUser.setPostalCode(updatedUser.getPostalCode());
+        }
+        if (updatedUser.getCountry() != null) {
+            existingUser.setCountry(updatedUser.getCountry());
+        }
+        if (updatedUser.getDateOfBirth() != null) {
+            existingUser.setDateOfBirth(updatedUser.getDateOfBirth());
+        }
+        if (updatedUser.getGender() != null) {
+            existingUser.setGender(updatedUser.getGender());
+        }
+        if (updatedUser.getNationality() != null) {
+            existingUser.setNationality(updatedUser.getNationality());
+        }
+        if (updatedUser.getPreferredContactMethod() != null) {
+            existingUser.setPreferredContactMethod(updatedUser.getPreferredContactMethod());
+        }
+        if (updatedUser.getMaritalStatus() != null) {
+            existingUser.setMaritalStatus(updatedUser.getMaritalStatus());
+        }
+
+        // Save the updated user to the database
+        return userRepository.save(existingUser);
     }
 
 

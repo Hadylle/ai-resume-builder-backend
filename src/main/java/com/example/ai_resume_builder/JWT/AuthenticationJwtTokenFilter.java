@@ -28,34 +28,19 @@ public class AuthenticationJwtTokenFilter extends OncePerRequestFilter {
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {
-        System.out.println("dzovi");
         try {
             String jwt = parseJwt(request);
-            logger.info("Extracted JWT: " + jwt); // Log extracted token
-
             if (jwt != null && jwtUtils.validateJwtToken(jwt)) {
-                logger.info("JWT is valid");
-                String username = jwtUtils.getUserNameFromJwtToken(jwt);
-                logger.info("Extracted Username: " + username);
-
-
-                UserDetails userDetails = userDetailsService.loadUserByUsername(username);
+                String sub = jwtUtils.getUserNameFromJwtToken(jwt); // This now returns the sub claim
+                UserDetails userDetails = userDetailsService.loadUserBySub(sub); // Implement this method
                 UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(userDetails, null,
                         userDetails.getAuthorities());
                 authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-                logger.info("Token Authentication Successful: " + authentication);
-
                 SecurityContextHolder.getContext().setAuthentication(authentication);
-                logger.info("Token Authentication Successful for: " + username);
-
-            } else {
-                logger.warn("JWT is null or invalid");
-
             }
         } catch (Exception e) {
             logger.error("Cannot set user authentication: {}", e);
         }
-
         filterChain.doFilter(request, response);
     }
 
