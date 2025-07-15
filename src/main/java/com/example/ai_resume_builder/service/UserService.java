@@ -75,6 +75,8 @@ public class UserService implements UserDetailsService {
                     user.get().getRole().name()
             ));
 
+
+
         } catch (BadCredentialsException e) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                     .body(Map.of("error", "Invalid email or password"));

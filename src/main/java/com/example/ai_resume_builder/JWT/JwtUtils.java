@@ -45,6 +45,8 @@ public class JwtUtils {
             userPrincipal.setSub(sub);
             // Save the user entity with the new sub value
             userRepository.save(userPrincipal);
+            logger.info("AuthService: Generating token for sub: {}", sub);
+            logger.info("AuthService: Using jwtSecret: {}", jwtSecret);
         }
         return generateTokenFromSub(sub, jwtExpirationMs);
     }
